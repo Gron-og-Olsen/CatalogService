@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CatalogAPI", "CatalogAPI\CatalogAPI.csproj", "{592C6D22-6A66-4658-A961-1A483A0A623E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CatalogTest", "CatalogTest\CatalogTest.csproj", "{A84B995C-9698-4F12-A17F-59B0332F75FB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{592C6D22-6A66-4658-A961-1A483A0A623E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{592C6D22-6A66-4658-A961-1A483A0A623E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{592C6D22-6A66-4658-A961-1A483A0A623E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{592C6D22-6A66-4658-A961-1A483A0A623E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A84B995C-9698-4F12-A17F-59B0332F75FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A84B995C-9698-4F12-A17F-59B0332F75FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A84B995C-9698-4F12-A17F-59B0332F75FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A84B995C-9698-4F12-A17F-59B0332F75FB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
