@@ -1,3 +1,6 @@
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+
 namespace Models
 {
     public enum Category
@@ -13,6 +16,8 @@ namespace Models
 
     public class Product
     {
+        [BsonId]
+        [BsonRepresentation(BsonType.String)] // Ensures the Guid is stored as a string in MongoDB
         public Guid Id { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
