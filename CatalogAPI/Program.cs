@@ -1,3 +1,5 @@
+using Models; // Til MongoDB settings
+using MongoDB.Driver;
 using NLog;
 using NLog.Web;
 
@@ -11,9 +13,31 @@ try
 
     // Add services to the container.
     builder.Services.AddControllers();
-    // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+    // Load MongoDB configuration
+    builder.Services.Configure<MongoDBSettings>(
+        builder.Configuration.GetSection("MongoDB"));
+
+    // Register MongoDB client and collection
+    builder.Services.AddSingleton<IMongoClient>(s =>
+    {
+        var settings = builder.Configuration.GetSection("MongoDB").Get<MongoDBSettings>();
+        return new MongoClient(settings.ConnectionString);
+    });
+
+    builder.Services.AddScoped(s =>
+    {
+        var client = s.GetRequiredService<IMongoClient>();
+        var settings = builder.Configuration.GetSection("MongoDB").Get<MongoDBSettings>();
+        var database = client.GetDatabase(settings.DatabaseName);
+        return database.GetCollection<Models.Product>(settings.CollectionName);
+    });
+
+    // Swagger/OpenAPI configuration
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
+
+    // NLog setup
     builder.Logging.ClearProviders();
     builder.Host.UseNLog();
 

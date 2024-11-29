@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Models; 
+using MongoDB.Driver;
+using Models;
+
 
 namespace CatalogAPI.Controllers;
 
@@ -7,67 +9,56 @@ namespace CatalogAPI.Controllers;
 [Route("[controller]")]
 public class CatalogController : ControllerBase
 {
-   
-
+    private readonly IMongoCollection<Product> _productCollection;
     private readonly ILogger<CatalogController> _logger;
 
-    public CatalogController(ILogger<CatalogController> logger)
+    public CatalogController(IMongoCollection<Product> productCollection, ILogger<CatalogController> logger)
     {
+        _productCollection = productCollection;
         _logger = logger;
     }
-     private static List<Product> _products = new List<Product>()
-        {
-            new()
-            {
-                Id = new Guid("7125e019-c469-4dbd-93e5-426de6652523"),
-                Name = "Kunstværk",
-                Description = "Meget flot billede",
-                Price = 12.99m,
-                Brand = "Autentisk",
-                Manufacturer = "Østrigsk maler",
-                Model = "Standard",
-                ImageUrl = "https://example.com/billede.jpg",
-                ProductUrl = "https://example.com/billede",
-                ReleaseDate = DateTime.Now,
-                ExpiryDate = DateTime.Now.AddDays(3)
-            }
-        };
 
-[HttpGet("{productId}", Name = "GetProductById")]
-        public Product Get(Guid productId)
+    [HttpPost]
+    [Route("AddProduct")]
+    public async Task<ActionResult<Product>> AddProduct([FromBody] Product newProduct)
+    {
+        _logger.LogInformation("Method AddProduct called at {DT}", DateTime.UtcNow.ToLongTimeString());
+
+        if (newProduct.Id == Guid.Empty)
         {
-            _logger.LogInformation("Metode GetProduct called at {DT}",
-            DateTime.UtcNow.ToLongTimeString());
-            return _products.FirstOrDefault(p => p.Id == productId);
+            newProduct.Id = Guid.NewGuid();
         }
 
-        // POST method to receive product object and add a product
-        [HttpPost("add-product")]
-        public IActionResult AddProduct([FromBody] Product product)
+        await _productCollection.InsertOneAsync(newProduct);
+
+        _logger.LogInformation("New product with ID {ID} added at {DT}", newProduct.Id, DateTime.UtcNow.ToLongTimeString());
+
+        return CreatedAtRoute("GetProductById", new { productId = newProduct.Id }, newProduct);
+    }
+
+    [HttpGet]
+    [Route("GetAllProducts")]
+    public async Task<ActionResult<List<Product>>> GetAllProducts()
+    {
+        _logger.LogInformation("Method GetAllProducts called at {DT}", DateTime.UtcNow.ToLongTimeString());
+
+        var products = await _productCollection.Find(_ => true).ToListAsync();
+
+        return Ok(products);
+    }
+
+    [HttpGet("{productId}", Name = "GetProductById")]
+    [Route("GetProductById/{productId}")]
+    public async Task<ActionResult<Product>> GetProductById(Guid productId)
+    {
+        _logger.LogInformation("Method GetProductById called at {DT}", DateTime.UtcNow.ToLongTimeString());
+
+        var product = await _productCollection.Find(p => p.Id == productId).FirstOrDefaultAsync();
+        if (product == null)
         {
-            _logger.LogInformation("Metode add-product called at {DT}",
-            DateTime.UtcNow.ToLongTimeString());
-
-            // Tjek om produktet allerede findes baseret på ProductID
-            var existingProduct = _products.FirstOrDefault(p => p.Id == product.Id);
-
-            if (existingProduct != null)
-            {
-                // Log en advarsel hvis produktet allerede findes
-                _logger.LogWarning("Attempt to add product with ID {ProductID} which already exists at {DT}", product.Id, DateTime.UtcNow.ToLongTimeString());
-
-                // Returner en HTTP statuskode 409 (Conflict)
-                return StatusCode(StatusCodes.Status409Conflict, "Product with this ID already exists.");
-            }
-
-            // Tilføj produktet til listen, hvis det ikke findes
-            _products.Add(product);
-
-            // Log information om tilføjelse af produktet
-            _logger.LogInformation("New product with ID {ProductID} added successfully at {DT}", product.Id, DateTime.UtcNow.ToLongTimeString());
-
-            // Returner en HTTP statuskode 201 (Created)
-            return StatusCode(StatusCodes.Status201Created, "Product added successfully.");
+            return NotFound(new { message = $"Product with ID {productId} not found." });
         }
-   
+
+        return Ok(product);
+    }
 }
