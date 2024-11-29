@@ -18,7 +18,8 @@ public class CatalogController : ControllerBase
         _logger = logger;
     }
 
-    [HttpPost(Name = "AddProduct")]
+    [HttpPost]
+    [Route("AddProduct")]
     public async Task<ActionResult<Product>> AddProduct([FromBody] Product newProduct)
     {
         _logger.LogInformation("Method AddProduct called at {DT}", DateTime.UtcNow.ToLongTimeString());
@@ -35,7 +36,8 @@ public class CatalogController : ControllerBase
         return CreatedAtRoute("GetProductById", new { productId = newProduct.Id }, newProduct);
     }
 
-    [HttpGet(Name = "GetAllProducts")]
+    [HttpGet]
+    [Route("GetAllProducts")]
     public async Task<ActionResult<List<Product>>> GetAllProducts()
     {
         _logger.LogInformation("Method GetAllProducts called at {DT}", DateTime.UtcNow.ToLongTimeString());
@@ -45,7 +47,8 @@ public class CatalogController : ControllerBase
         return Ok(products);
     }
 
-    [HttpGet("{productId}", Name = "GetProductById")]
+    [HttpGet("{productId}")]
+    [Route("GetProductById/{productId}")]
     public async Task<ActionResult<Product>> GetProductById(Guid productId)
     {
         _logger.LogInformation("Method GetProductById called at {DT}", DateTime.UtcNow.ToLongTimeString());
