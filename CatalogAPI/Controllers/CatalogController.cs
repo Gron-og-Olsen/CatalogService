@@ -47,7 +47,7 @@ public class CatalogController : ControllerBase
         return Ok(products);
     }
 
-    [HttpGet("{productId}")]
+    [HttpGet("{productId}", Name = "GetProductById")]
     [Route("GetProductById/{productId}")]
     public async Task<ActionResult<Product>> GetProductById(Guid productId)
     {

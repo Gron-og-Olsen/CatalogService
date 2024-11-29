@@ -3,13 +3,13 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Models
 {
-    public enum Category
+   public enum Category
     {
-        Electronics,
-        Clothing,
-        HomeAppliances,
-        Books,
-        Paintings,
+        Electronics = 1,
+        Clothing = 2,
+        HomeAppliances = 3,
+        Books = 4,
+        Paintings = 5,
         
         // tilføj eventuelt flere kategorier
     }
