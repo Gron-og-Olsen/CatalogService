@@ -22,13 +22,14 @@ namespace Models
         public string? Name { get; set; }
         public string? Description { get; set; }
         public Category Category { get; set; } // Ændret fra string til enum
-        public decimal Price { get; set; }
+        public decimal FinalPrice { get; set; }
+        public decimal CurrentBid { get; set; }
         public string? Brand { get; set; }
-        public string? Manufacturer { get; set; }
         public string? Model { get; set; }
+        public string Condition {get; set;}
         public string? ImageUrl { get; set; }
-        public string? ProductUrl { get; set; }
+        public string Valuation { get; set; }
         public DateTime ReleaseDate { get; set; }
-        public DateTime? ExpiryDate { get; set; }
+        public DateTime ExpiryDate { get; set; }
     }
 }

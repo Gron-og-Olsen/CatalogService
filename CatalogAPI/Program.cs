@@ -2,6 +2,8 @@ using Models; // Til MongoDB settings
 using MongoDB.Driver;
 using NLog;
 using NLog.Web;
+using Microsoft.Extensions.FileProviders;
+using System.IO;
 
 try
 {
@@ -15,8 +17,7 @@ try
     builder.Services.AddControllers();
 
     // Load MongoDB configuration
-    builder.Services.Configure<MongoDBSettings>(
-        builder.Configuration.GetSection("MongoDB"));
+    builder.Services.Configure<MongoDBSettings>(builder.Configuration.GetSection("MongoDB"));
 
     // Register MongoDB client and collection
     builder.Services.AddSingleton<IMongoClient>(s =>
@@ -41,6 +42,9 @@ try
     builder.Logging.ClearProviders();
     builder.Host.UseNLog();
 
+    // Add support for serving static files
+    builder.Services.AddDirectoryBrowser(); // To browse directories via URL (optional)
+    
     var app = builder.Build();
 
     // Configure the HTTP request pipeline.
@@ -49,6 +53,14 @@ try
         app.UseSwagger();
         app.UseSwaggerUI();
     }
+
+    // Configure static file serving
+    var uploadedImagesPath = "/srv/images";  // Your Docker volume mount path
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(uploadedImagesPath),  // Physical path inside container
+        RequestPath = "/UploadedImages"  // URL to access images
+    });
 
     app.UseHttpsRedirection();
     app.UseAuthorization();
