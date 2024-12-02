@@ -1,5 +1,6 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using System;
 
 namespace Models
 {
@@ -26,8 +27,8 @@ namespace Models
         public decimal CurrentBid { get; set; }
         public string? Brand { get; set; }
         public string? Model { get; set; }
-        public string Condition {get; set;}
-        public string? ImageUrl { get; set; }
+        public string Condition { get; set; }
+        public string[]? ImageUrls { get; set; } // Ændret til array af strenge, så vi kan have flere billeder
         public string Valuation { get; set; }
         public DateTime ReleaseDate { get; set; }
         public DateTime ExpiryDate { get; set; }
