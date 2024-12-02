@@ -44,14 +44,14 @@ namespace CatalogAPI.Controllers
 
             var products = await _productCollection.Find(_ => true).ToListAsync();
 
-            // Construct full image URL if exists
+            // Construct full image URLs if any exist
             foreach (var product in products)
             {
-                if (!string.IsNullOrEmpty(product.ImageUrl))
+                if (product.ImageUrls != null && product.ImageUrls.Length > 0)
                 {
                     var imageBaseUrl = "http://localhost:5047/UploadedImages"; // Assuming port 5047
-                    var imageFilePath = Path.Combine(imageBaseUrl, product.Id.ToString(), Path.GetFileName(product.ImageUrl));
-                    product.ImageUrl = imageFilePath;
+                    product.ImageUrls = product.ImageUrls.Select(imageUrl => 
+                        Path.Combine(imageBaseUrl, product.Id.ToString(), Path.GetFileName(imageUrl))).ToArray();
                 }
             }
 
@@ -70,12 +70,12 @@ namespace CatalogAPI.Controllers
                 return NotFound(new { message = $"Product with ID {productId} not found." });
             }
 
-            // Construct full image URL if exists
-            if (!string.IsNullOrEmpty(product.ImageUrl))
+            // Construct full image URLs if any exist
+            if (product.ImageUrls != null && product.ImageUrls.Length > 0)
             {
                 var imageBaseUrl = "http://localhost:5047/UploadedImages"; // Assuming port 5047
-                var imageFilePath = Path.Combine(imageBaseUrl, product.Id.ToString(), Path.GetFileName(product.ImageUrl));
-                product.ImageUrl = imageFilePath;
+                product.ImageUrls = product.ImageUrls.Select(imageUrl =>
+                    Path.Combine(imageBaseUrl, product.Id.ToString(), Path.GetFileName(imageUrl))).ToArray();
             }
 
             return Ok(product);
@@ -104,19 +104,29 @@ namespace CatalogAPI.Controllers
                 await image.CopyToAsync(fileStream);
             }
 
-            // Store the image path in the product record (you can adjust this part)
+            // Retrieve the product
             var product = await _productCollection.Find(p => p.Id == productId).FirstOrDefaultAsync();
             if (product == null)
             {
                 return NotFound(new { message = $"Product with ID {productId} not found." });
             }
 
-            product.ImageUrl = Path.Combine(productId.ToString(), image.FileName);  // Store relative path
+            // If the ImageUrls array is null, initialize it
+            if (product.ImageUrls == null)
+            {
+                product.ImageUrls = new string[] { };
+            }
+
+            // Add the new image URL to the ImageUrls array
+            var newImageUrl = Path.Combine(productId.ToString(), image.FileName);
+            product.ImageUrls = product.ImageUrls.Append(newImageUrl).ToArray();
+
+            // Update the product in the database
             await _productCollection.ReplaceOneAsync(p => p.Id == productId, product);
 
             _logger.LogInformation("Image uploaded successfully for product ID {ID} at {DT}", productId, DateTime.UtcNow.ToLongTimeString());
 
-            return Ok(new { imageUrl = $"http://localhost:5047/UploadedImages/{productId}/{image.FileName}" });
+            return Ok(new { imageUrls = product.ImageUrls.Select(imageUrl => $"http://localhost:5047/UploadedImages/{productId}/{Path.GetFileName(imageUrl)}") });
         }
     }
 }
