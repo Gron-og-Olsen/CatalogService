@@ -4,27 +4,31 @@ using CatalogAPI.Controllers;
 using Models;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MongoDB.Driver;
+using Microsoft.Extensions.Logging;
 
 namespace CatalogTest
 {
+    [TestClass]
     public class Tests
     {
         private Mock<IMongoCollection<Product>> _mockProductCollection;
+        private Mock<ILogger<CatalogController>> _mockLogger;
         private CatalogController _controller;
 
-        [SetUp]
+        [TestInitialize]
         public void Setup()
         {
             // Opsætning af mocks
             _mockProductCollection = new Mock<IMongoCollection<Product>>();
+            _mockLogger = new Mock<ILogger<CatalogController>>(); // Mock af ILogger
 
-            // Opret controlleren med kun mock af IMongoCollection
-            _controller = new CatalogController(_mockProductCollection.Object);
+            // Opret controlleren med både mock af IMongoCollection og ILogger
+            _controller = new CatalogController(_mockProductCollection.Object, _mockLogger.Object);
         }
 
-        [Test]
+        [TestMethod]
         public async Task AddProduct_GårAltidIgennem()
         {
             // Arrange
@@ -49,10 +53,10 @@ namespace CatalogTest
             var result = await _controller.AddProduct(newProduct);
 
             // Assert
-            Assert.Pass(); // Testen vil altid passere uden at validere noget
+            Assert.IsTrue(true); // Testen vil altid passere uden at validere noget
         }
 
-        [Test]
+        [TestMethod]
         public async Task AddProduct_KalderInsertOneAsync()
         {
             // Arrange
@@ -80,7 +84,7 @@ namespace CatalogTest
             _mockProductCollection.Verify(m => m.InsertOneAsync(It.IsAny<Product>(), null, default), Times.Once);
         }
 
-        [Test]
+        [TestMethod]
         public async Task AddProduct_TilføjetID()
         {
             // Arrange
@@ -108,7 +112,7 @@ namespace CatalogTest
             Assert.AreNotEqual(Guid.Empty, newProduct.Id); // ID skal være ændret fra Guid.Empty
         }
 
-        [Test]
+        [TestMethod]
         public async Task AddProduct_201()
         {
             // Arrange
@@ -133,10 +137,10 @@ namespace CatalogTest
             var result = await _controller.AddProduct(newProduct);
 
             // Assert
-            Assert.IsInstanceOf<CreatedAtRouteResult>(result.Result); // Skal returnere CreatedAtRouteResult altså en 201
+            Assert.IsInstanceOfType(result.Result, typeof(CreatedAtRouteResult)); // Skal returnere CreatedAtRouteResult altså en 201
         }
 
-        [Test]
+        [TestMethod]
         public async Task AddProduct_ManglerFelter()
         {
             // Arrange - her er et produkt med nogle ugyldige felter
@@ -161,7 +165,7 @@ namespace CatalogTest
             var result = await _controller.AddProduct(newProduct);
 
             // Assert
-            Assert.IsInstanceOf<BadRequestObjectResult>(result.Result); // Skal returnere BadRequest fordi der mangler felter
+            Assert.IsInstanceOfType(result.Result, typeof(BadRequestObjectResult)); // Skal returnere BadRequest fordi der mangler felter
             var badRequest = result.Result as BadRequestObjectResult;
             Assert.IsNotNull(badRequest?.Value); // Skal indeholde fejlbesked
         }
