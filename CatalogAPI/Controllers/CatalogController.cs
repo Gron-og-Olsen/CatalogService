@@ -15,7 +15,7 @@ namespace CatalogAPI.Controllers
         public CatalogController(IMongoCollection<Product> productCollection, ILogger<CatalogController> logger)
         {
             _productCollection = productCollection;
-            _logger = logger;  // Logger er nu en del af constructoren
+            _logger = logger;  
         }
 
         [HttpPost]
