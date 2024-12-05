@@ -3,10 +3,12 @@ using MongoDB.Driver;
 using NLog;
 using NLog.Web;
 using Microsoft.Extensions.FileProviders;
+using System.IO;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
+
 
 try
 {
@@ -46,7 +48,7 @@ try
     builder.Services.AddSwaggerGen();
 
     // Set up authentication
-    var httpClient = new HttpClient { BaseAddress = new Uri("http://auth-service") }; // AuthService base URL
+    var httpClient = new HttpClient { BaseAddress = new Uri("http://authservice") }; // AuthService base URL
     var authServiceResponse = httpClient.GetAsync("Auth/GetValidationKeys").Result;
 
     string issuer, secret;
@@ -76,7 +78,7 @@ try
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
                 ValidIssuer = issuer,
-                ValidAudience = "http://localhost",
+                ValidAudience = "http://catalogservice",
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret))
             };
         });
