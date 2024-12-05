@@ -4,6 +4,9 @@ using NLog;
 using NLog.Web;
 using Microsoft.Extensions.FileProviders;
 using System.IO;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 try
 {
@@ -12,6 +15,10 @@ try
     logger.Debug("init main");
 
     var builder = WebApplication.CreateBuilder(args);
+
+    // Set up NLog
+    builder.Logging.ClearProviders();
+    builder.Host.UseNLog();
 
     // Add services to the container.
     builder.Services.AddControllers();
@@ -31,20 +38,52 @@ try
         var client = s.GetRequiredService<IMongoClient>();
         var settings = builder.Configuration.GetSection("MongoDB").Get<MongoDBSettings>();
         var database = client.GetDatabase(settings.DatabaseName);
-        return database.GetCollection<Models.Product>(settings.CollectionName);
+        return database.GetCollection<Product>(settings.CollectionName);
     });
 
     // Swagger/OpenAPI configuration
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
-    // NLog setup
-    builder.Logging.ClearProviders();
-    builder.Host.UseNLog();
+    // Set up authentication
+    var httpClient = new HttpClient { BaseAddress = new Uri("http://auth-service") }; // AuthService base URL
+    var authServiceResponse = httpClient.GetAsync("Auth/GetValidationKeys").Result;
+
+    string issuer, secret;
+
+    if (authServiceResponse.IsSuccessStatusCode)
+    {
+        var keys = authServiceResponse.Content.ReadFromJsonAsync<ValidationKeys>().Result;
+        issuer = keys?.Issuer ?? throw new Exception("Issuer not found in AuthService response.");
+        secret = keys?.Secret ?? throw new Exception("Secret not found in AuthService response.");
+    }
+    else
+    {
+        // Fallback to environment variables if AuthService is not available
+        issuer = Environment.GetEnvironmentVariable("Issuer") ?? "default-issuer";
+        secret = Environment.GetEnvironmentVariable("Secret") ?? "default-secret";
+        logger.Warn("AuthService is unavailable. Falling back to environment variables for JWT validation.");
+    }
+
+    builder.Services
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = issuer,
+                ValidAudience = "http://localhost",
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret))
+            };
+        });
 
     // Add support for serving static files
     builder.Services.AddDirectoryBrowser(); // To browse directories via URL (optional)
-    
+
     var app = builder.Build();
 
     // Configure the HTTP request pipeline.
@@ -63,6 +102,7 @@ try
     });
 
     app.UseHttpsRedirection();
+    app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
 
@@ -77,4 +117,11 @@ catch (Exception ex)
 finally
 {
     NLog.LogManager.Shutdown();
+}
+
+// Model for validation keys
+public class ValidationKeys
+{
+    public string Issuer { get; set; }
+    public string Secret { get; set; }
 }

@@ -18,6 +18,7 @@ namespace CatalogAPI.Controllers
             _logger = logger;
         }
 
+        [Authorize]
         [HttpPost]
         [Route("AddProduct")]
         public async Task<ActionResult<Product>> AddProduct([FromBody] Product newProduct)
@@ -36,6 +37,7 @@ namespace CatalogAPI.Controllers
             return CreatedAtRoute("GetProductById", new { productId = newProduct.Id }, newProduct);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("GetAllProducts")]
         public async Task<ActionResult<List<Product>>> GetAllProducts()
@@ -57,7 +59,7 @@ namespace CatalogAPI.Controllers
 
             return Ok(products);
         }
-
+        [Authorize]
         [HttpGet("{productId}", Name = "GetProductById")]
         [Route("GetProductById/{productId}")]
         public async Task<ActionResult<Product>> GetProductById(Guid productId)
@@ -80,7 +82,7 @@ namespace CatalogAPI.Controllers
 
             return Ok(product);
         }
-
+        [Authorize]
         [HttpPost("UploadImage/{productId}")]
         public async Task<ActionResult> UploadImage(Guid productId, IFormFile image)
         {
