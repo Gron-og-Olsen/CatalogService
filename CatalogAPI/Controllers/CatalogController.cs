@@ -52,7 +52,7 @@ namespace CatalogAPI.Controllers
             {
                 if (product.ImageUrls != null && product.ImageUrls.Length > 0)
                 {
-                    var imageBaseUrl = "http://localhost:5047/UploadedImages"; // Assuming port 5047
+                    var imageBaseUrl = "http://catalogservice:5001/UploadedImages"; // Assuming port 5047
                     product.ImageUrls = product.ImageUrls.Select(imageUrl => 
                         Path.Combine(imageBaseUrl, product.Id.ToString(), Path.GetFileName(imageUrl))).ToArray();
                 }
@@ -76,7 +76,7 @@ namespace CatalogAPI.Controllers
             // Construct full image URLs if any exist
             if (product.ImageUrls != null && product.ImageUrls.Length > 0)
             {
-                var imageBaseUrl = "http://localhost:5047/UploadedImages"; // Assuming port 5047
+                var imageBaseUrl = "http://catalogservice:5001/UploadedImages"; // Assuming port 5047
                 product.ImageUrls = product.ImageUrls.Select(imageUrl =>
                     Path.Combine(imageBaseUrl, product.Id.ToString(), Path.GetFileName(imageUrl))).ToArray();
             }
@@ -129,7 +129,7 @@ namespace CatalogAPI.Controllers
 
             _logger.LogInformation("Image uploaded successfully for product ID {ID} at {DT}", productId, DateTime.UtcNow.ToLongTimeString());
 
-            return Ok(new { imageUrls = product.ImageUrls.Select(imageUrl => $"http://localhost:5047/UploadedImages/{productId}/{Path.GetFileName(imageUrl)}") });
+            return Ok(new { imageUrls = product.ImageUrls.Select(imageUrl => $"http://catalogservice:5001/UploadedImages/{productId}/{Path.GetFileName(imageUrl)}") });
         }
     }
 }
