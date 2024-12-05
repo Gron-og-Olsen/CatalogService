@@ -14,7 +14,7 @@ services:
       - catalog-images:/srv/images
 
   auth-service:
-    image: ____________________
+    image: cbjoedstrup/authservice-image
     container_name: authservice
     ports:
       - "5002:8080"
@@ -22,7 +22,7 @@ services:
       - mitnet
 
   user-service:
-    image: ____________________
+    image: cbjoedstrup/userservice-image
     container_name: userservice
     ports:
       - "5003:8080"
