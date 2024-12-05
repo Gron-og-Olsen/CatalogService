@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using Models;
 using System.IO;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CatalogAPI.Controllers
 {
