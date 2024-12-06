@@ -47,7 +47,7 @@ try
     builder.Services.AddSwaggerGen();
 */
     // Set up authentication
-    var httpClient = new HttpClient { BaseAddress = new Uri("http://authservice") }; // AuthService base URL
+    var httpClient = new HttpClient { BaseAddress = new Uri("http://authservice:8080") }; // AuthService base URL
     var authServiceResponse = httpClient.GetAsync("Auth/GetValidationKeys").Result;
 
     string issuer, secret;
