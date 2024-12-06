@@ -26,6 +26,11 @@ namespace CatalogAPI.Controllers
         {
             _logger.LogInformation("Method AddProduct called at {DT}", DateTime.UtcNow.ToLongTimeString());
 
+            if (!User.Identity.IsAuthenticated)
+            {
+                return Unauthorized("Thou shall not pass, mortal!");
+            }
+            
             if (newProduct.Id == Guid.Empty)
             {
                 newProduct.Id = Guid.NewGuid();

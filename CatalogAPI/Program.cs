@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 
-
 try
 {
     var logger = NLog.LogManager.Setup().LoadConfigurationFromAppSettings()
@@ -42,11 +41,11 @@ try
         var database = client.GetDatabase(settings.DatabaseName);
         return database.GetCollection<Product>(settings.CollectionName);
     });
-
+/*
     // Swagger/OpenAPI configuration
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
-
+*/
     // Set up authentication
     var httpClient = new HttpClient { BaseAddress = new Uri("http://authservice") }; // AuthService base URL
     var authServiceResponse = httpClient.GetAsync("Auth/GetValidationKeys").Result;
@@ -61,10 +60,7 @@ try
     }
     else
     {
-        // Fallback to environment variables if AuthService is not available
-        issuer = Environment.GetEnvironmentVariable("Issuer") ?? "default-issuer";
-        secret = Environment.GetEnvironmentVariable("Secret") ?? "default-secret";
-        logger.Warn("AuthService is unavailable. Falling back to environment variables for JWT validation.");
+        throw new Exception("Failed to retrieve validation keys from AuthService.");
     }
 
     builder.Services
@@ -88,13 +84,13 @@ try
 
     var app = builder.Build();
 
-    // Configure the HTTP request pipeline.
+  /*  // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
         app.UseSwaggerUI();
     }
-
+*/
     // Configure static file serving
     var uploadedImagesPath = "/srv/images";  // Your Docker volume mount path
     app.UseStaticFiles(new StaticFileOptions
