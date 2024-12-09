@@ -46,9 +46,17 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 */
-    // Set up authentication
-    var httpClient = new HttpClient { BaseAddress = new Uri("http://authservice:8080") }; // AuthService base URL
-    var authServiceResponse = httpClient.GetAsync("Auth/GetValidationKeys").Result;
+// Hent AuthService URL fra miljøvariabel
+var authServiceUrl = Environment.GetEnvironmentVariable("AUTHSERVICE_URL") 
+                     ?? throw new InvalidOperationException("AuthService URL is not configured.");
+
+// Brug miljøvariabel til at opsætte HttpClient
+var httpClient = new HttpClient { BaseAddress = new Uri(authServiceUrl) };
+
+// Hent valideringsnøgler fra AuthService
+var authServiceResponse = httpClient.GetAsync("Auth/GetValidationKeys").Result;
+
+
 
     string issuer, secret;
 
