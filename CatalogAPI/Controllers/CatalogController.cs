@@ -11,12 +11,12 @@ namespace CatalogAPI.Controllers
     public class CatalogController : ControllerBase
     {
         private readonly IMongoCollection<Product> _productCollection;
-        private readonly ILogger<CatalogController> _logger;
+        private readonly ILogger<CatalogController> _logger;  
 
         public CatalogController(IMongoCollection<Product> productCollection, ILogger<CatalogController> logger)
         {
             _productCollection = productCollection;
-            _logger = logger;
+            _logger = logger;  
         }
 
         [Authorize]
@@ -36,11 +36,19 @@ namespace CatalogAPI.Controllers
                 newProduct.Id = Guid.NewGuid();
             }
 
-            await _productCollection.InsertOneAsync(newProduct);
+                // Indsæt produktet i databasen
+                await _productCollection.InsertOneAsync(newProduct);
 
-            _logger.LogInformation("New product with ID {ID} added at {DT}", newProduct.Id, DateTime.UtcNow.ToLongTimeString());
-
-            return CreatedAtRoute("GetProductById", new { productId = newProduct.Id }, newProduct);
+                // Returner en CreatedAtRouteResult med det oprettede produkt
+                _logger.LogInformation("Product added with ID: {ProductId}", newProduct.Id);
+                return CreatedAtRoute("GetProductById", new { productId = newProduct.Id }, newProduct);
+            }
+            catch (Exception ex)
+            {
+                // Hvis noget går galt, f.eks. i forbindelse med databasen, returner en serverfejl
+                _logger.LogError(ex, "Error while adding product");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         [Authorize]
@@ -48,7 +56,7 @@ namespace CatalogAPI.Controllers
         [Route("GetAllProducts")]
         public async Task<ActionResult<List<Product>>> GetAllProducts()
         {
-            _logger.LogInformation("Method GetAllProducts called at {DT}", DateTime.UtcNow.ToLongTimeString());
+            _logger.LogInformation("Fetching all products at {DT}", DateTime.UtcNow);
 
             var products = await _productCollection.Find(_ => true).ToListAsync();
 
@@ -70,11 +78,12 @@ namespace CatalogAPI.Controllers
         [Route("GetProductById/{productId}")]
         public async Task<ActionResult<Product>> GetProductById(Guid productId)
         {
-            _logger.LogInformation("Method GetProductById called at {DT}", DateTime.UtcNow.ToLongTimeString());
+            _logger.LogInformation("Fetching product with ID {ProductId} at {DT}", productId, DateTime.UtcNow);
 
             var product = await _productCollection.Find(p => p.Id == productId).FirstOrDefaultAsync();
             if (product == null)
             {
+                _logger.LogWarning("Product with ID {ProductId} not found", productId);
                 return NotFound(new { message = $"Product with ID {productId} not found." });
             }
 
@@ -92,11 +101,12 @@ namespace CatalogAPI.Controllers
         [HttpPost("UploadImage/{productId}")]
         public async Task<ActionResult> UploadImage(Guid productId, IFormFile image)
         {
-            _logger.LogInformation("Uploading image for product with ID {ID} at {DT}", productId, DateTime.UtcNow.ToLongTimeString());
+            _logger.LogInformation("Uploading image for product with ID {ProductId} at {DT}", productId, DateTime.UtcNow);
 
             // Check if file is null or empty
             if (image == null || image.Length == 0)
             {
+                _logger.LogWarning("No image provided for product with ID {ProductId}", productId);
                 return BadRequest("No image provided.");
             }
 
@@ -116,6 +126,7 @@ namespace CatalogAPI.Controllers
             var product = await _productCollection.Find(p => p.Id == productId).FirstOrDefaultAsync();
             if (product == null)
             {
+                _logger.LogWarning("Product with ID {ProductId} not found during image upload", productId);
                 return NotFound(new { message = $"Product with ID {productId} not found." });
             }
 
@@ -132,7 +143,7 @@ namespace CatalogAPI.Controllers
             // Update the product in the database
             await _productCollection.ReplaceOneAsync(p => p.Id == productId, product);
 
-            _logger.LogInformation("Image uploaded successfully for product ID {ID} at {DT}", productId, DateTime.UtcNow.ToLongTimeString());
+            _logger.LogInformation("Image uploaded successfully for product ID {ProductId} at {DT}", productId, DateTime.UtcNow);
 
             return Ok(new { imageUrls = product.ImageUrls.Select(imageUrl => $"http://catalogservice:5001/UploadedImages/{productId}/{Path.GetFileName(imageUrl)}") });
         }
