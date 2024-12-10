@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  catalog-service:
+    image: soekopaacykel/catalogservice:latest
+    container_name: catalogservice
+    environment:
+      - ImagePath=/srv/images
+    ports:
+      - "5001:8080"
+    networks:
+      - default
+    volumes:
+      - catalog-images:/srv/images
+
+  auth-service:
+    image: cbjoedstrup/authservice-image
+    container_name: authservice
+    ports:
+      - "5002:8080"
+    networks:
+      - default
+
+  user-service:
+    image: cbjoedstrup/userservice-image
+    container_name: userservice
+    ports:
+      - "5003:8080"
+    networks:
+      - default
+    
+
+
+volumes:
+  catalog-images:
+    external: false
+  
+networks:
+  default:
+    driver: bridge
+    name: mitnet

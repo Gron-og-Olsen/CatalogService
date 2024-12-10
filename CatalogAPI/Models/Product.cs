@@ -23,8 +23,6 @@ namespace Models
         public string? Name { get; set; }
         public string? Description { get; set; }
         public Category Category { get; set; } // Ændret fra string til enum
-        public decimal FinalPrice { get; set; }
-        public decimal CurrentBid { get; set; }
         public string? Brand { get; set; }
         public string? Model { get; set; }
         public string Condition { get; set; }

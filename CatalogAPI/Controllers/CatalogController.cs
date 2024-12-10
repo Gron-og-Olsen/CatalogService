@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using Models;
 using System.IO;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CatalogAPI.Controllers
 {
@@ -18,24 +19,22 @@ namespace CatalogAPI.Controllers
             _logger = logger;  
         }
 
+        [Authorize]
         [HttpPost]
         [Route("AddProduct")]
         public async Task<ActionResult<Product>> AddProduct([FromBody] Product newProduct)
         {
-            try
-            {
-                // Inputvalidering: Sørger for at produktet har nødvendige felter (f.eks. navn og vurdering)
-                if (newProduct == null || string.IsNullOrEmpty(newProduct.Name) || newProduct.Valuation <= 0)
-                {
-                    _logger.LogWarning("Invalid product data received: {Product}", newProduct);
-                    return BadRequest("Produktet er ikke gyldigt. Sørg for at have et navn og en positiv pris.");
-                }
+            _logger.LogInformation("Method AddProduct called at {DT}", DateTime.UtcNow.ToLongTimeString());
 
-                // Hvis produktet ikke har et ID, opret et nyt
-                if (newProduct.Id == Guid.Empty)
-                {
-                    newProduct.Id = Guid.NewGuid();
-                }
+            if (!User.Identity.IsAuthenticated)
+            {
+                return Unauthorized("Thou shall not pass, mortal!");
+            }
+            
+            if (newProduct.Id == Guid.Empty)
+            {
+                newProduct.Id = Guid.NewGuid();
+            }
 
                 // Indsæt produktet i databasen
                 await _productCollection.InsertOneAsync(newProduct);
@@ -52,6 +51,7 @@ namespace CatalogAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpGet]
         [Route("GetAllProducts")]
         public async Task<ActionResult<List<Product>>> GetAllProducts()
@@ -65,15 +65,15 @@ namespace CatalogAPI.Controllers
             {
                 if (product.ImageUrls != null && product.ImageUrls.Length > 0)
                 {
-                    var imageBaseUrl = "http://localhost:5047/UploadedImages"; // Assuming port 5047
-                    product.ImageUrls = product.ImageUrls.Select(imageUrl =>
+                    var imageBaseUrl = "http://catalogservice:5001/UploadedImages"; // Assuming port 5047
+                    product.ImageUrls = product.ImageUrls.Select(imageUrl => 
                         Path.Combine(imageBaseUrl, product.Id.ToString(), Path.GetFileName(imageUrl))).ToArray();
                 }
             }
 
             return Ok(products);
         }
-
+        [Authorize]
         [HttpGet("{productId}", Name = "GetProductById")]
         [Route("GetProductById/{productId}")]
         public async Task<ActionResult<Product>> GetProductById(Guid productId)
@@ -90,14 +90,14 @@ namespace CatalogAPI.Controllers
             // Construct full image URLs if any exist
             if (product.ImageUrls != null && product.ImageUrls.Length > 0)
             {
-                var imageBaseUrl = "http://localhost:5047/UploadedImages"; // Assuming port 5047
+                var imageBaseUrl = "http://catalogservice:5001/UploadedImages"; // Assuming port 5047
                 product.ImageUrls = product.ImageUrls.Select(imageUrl =>
                     Path.Combine(imageBaseUrl, product.Id.ToString(), Path.GetFileName(imageUrl))).ToArray();
             }
 
             return Ok(product);
         }
-
+        [Authorize]
         [HttpPost("UploadImage/{productId}")]
         public async Task<ActionResult> UploadImage(Guid productId, IFormFile image)
         {
@@ -145,7 +145,7 @@ namespace CatalogAPI.Controllers
 
             _logger.LogInformation("Image uploaded successfully for product ID {ProductId} at {DT}", productId, DateTime.UtcNow);
 
-            return Ok(new { imageUrls = product.ImageUrls.Select(imageUrl => $"http://localhost:5047/UploadedImages/{productId}/{Path.GetFileName(imageUrl)}") });
+            return Ok(new { imageUrls = product.ImageUrls.Select(imageUrl => $"http://catalogservice:5001/UploadedImages/{productId}/{Path.GetFileName(imageUrl)}") });
         }
     }
 }
