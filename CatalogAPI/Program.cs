@@ -78,13 +78,11 @@ var authServiceResponse = httpClient.GetAsync("Auth/GetValidationKeys").Result;
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
-                ValidateAudience = true,
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
                 ValidIssuer = issuer,
-                ValidAudience = "http://catalogservice",
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret))
-            };
+            }; //hej
         });
 
     // Add support for serving static files
