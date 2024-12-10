@@ -19,37 +19,39 @@ namespace CatalogAPI.Controllers
             _logger = logger;  
         }
 
-        [Authorize]
         [HttpPost]
-        [Route("AddProduct")]
-        public async Task<ActionResult<Product>> AddProduct([FromBody] Product newProduct)
+[Route("AddProduct")]
+public async Task<ActionResult<Product>> AddProduct([FromBody] Product newProduct)
+{
+    _logger.LogInformation("Method AddProduct called at {DT}", DateTime.UtcNow.ToLongTimeString());
+
+    try
+    {
+        if (!User.Identity.IsAuthenticated)
         {
-            _logger.LogInformation("Method AddProduct called at {DT}", DateTime.UtcNow.ToLongTimeString());
-
-            if (!User.Identity.IsAuthenticated)
-            {
-                return Unauthorized("Thou shall not pass, mortal!");
-            }
-            
-            if (newProduct.Id == Guid.Empty)
-            {
-                newProduct.Id = Guid.NewGuid();
-            }
-
-                // Indsæt produktet i databasen
-                await _productCollection.InsertOneAsync(newProduct);
-
-                // Returner en CreatedAtRouteResult med det oprettede produkt
-                _logger.LogInformation("Product added with ID: {ProductId}", newProduct.Id);
-                return CreatedAtRoute("GetProductById", new { productId = newProduct.Id }, newProduct);
-            }
-            catch (Exception ex)
-            {
-                // Hvis noget går galt, f.eks. i forbindelse med databasen, returner en serverfejl
-                _logger.LogError(ex, "Error while adding product");
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            return Unauthorized("Thou shall not pass, mortal!");
         }
+
+        if (newProduct.Id == Guid.Empty)
+        {
+            newProduct.Id = Guid.NewGuid();
+        }
+
+        // Indsæt produktet i databasen
+        await _productCollection.InsertOneAsync(newProduct);
+
+        // Returner en CreatedAtRouteResult med det oprettede produkt
+        _logger.LogInformation("Product added with ID: {ProductId}", newProduct.Id);
+        return CreatedAtRoute("GetProductById", new { productId = newProduct.Id }, newProduct);
+    }
+    catch (Exception ex)
+    {
+        // Hvis noget går galt, f.eks. i forbindelse med databasen, returner en serverfejl
+        _logger.LogError(ex, "Error while adding product");
+        return StatusCode(500, $"Internal server error: {ex.Message}");
+    }
+}
+
 
         [Authorize]
         [HttpGet]
