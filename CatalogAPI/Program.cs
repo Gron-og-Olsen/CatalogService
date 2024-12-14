@@ -24,37 +24,36 @@ try
     // Add services to the container.
     builder.Services.AddControllers();
 
-    // Load MongoDB configuration
-    builder.Services.Configure<MongoDBSettings>(builder.Configuration.GetSection("MongoDB"));
+    // Retrieve the MongoDB connection string from the environment variable in docker-compose.yml
+    var connectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING");
+    var VaredatabaseName = Environment.GetEnvironmentVariable("VareDatabaseName");
+    var VarecollectionName = Environment.GetEnvironmentVariable("VareCollectionName");
 
-    // Register MongoDB client and collection
-    builder.Services.AddSingleton<IMongoClient>(s =>
+    if (string.IsNullOrEmpty(connectionString))
     {
-        var settings = builder.Configuration.GetSection("MongoDB").Get<MongoDBSettings>();
-        return new MongoClient(settings.ConnectionString);
+        throw new InvalidOperationException("MongoDB connection string is not set in the environment variables.");
+    }
+
+    var mongoSettings = builder.Configuration.GetSection("MongoDB");
+
+    // Register MongoDB services
+    builder.Services.AddSingleton<IMongoClient, MongoClient>(sp => new MongoClient(connectionString));
+    builder.Services.AddSingleton(sp =>
+    {
+        var client = sp.GetRequiredService<IMongoClient>();
+        var database = client.GetDatabase(VaredatabaseName);
+        return database.GetCollection<Product>(VarecollectionName);
     });
 
-    builder.Services.AddScoped(s =>
-    {
-        var client = s.GetRequiredService<IMongoClient>();
-        var settings = builder.Configuration.GetSection("MongoDB").Get<MongoDBSettings>();
-        var database = client.GetDatabase(settings.DatabaseName);
-        return database.GetCollection<Product>(settings.CollectionName);
-    });
-/*
-    // Swagger/OpenAPI configuration
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
-*/
-// Hent AuthService URL fra miljøvariabel
-var authServiceUrl = Environment.GetEnvironmentVariable("AUTHSERVICE_URL") 
-                     ?? throw new InvalidOperationException("AuthService URL is not configured.");
+    // Hent AuthService URL fra miljøvariabel
+    var authServiceUrl = Environment.GetEnvironmentVariable("AUTHSERVICE_URL")
+                         ?? throw new InvalidOperationException("AuthService URL is not configured.");
 
-// Brug miljøvariabel til at opsætte HttpClient
-var httpClient = new HttpClient { BaseAddress = new Uri(authServiceUrl) };
+    // Brug miljøvariabel til at opsætte HttpClient
+    var httpClient = new HttpClient { BaseAddress = new Uri(authServiceUrl) };
 
-// Hent valideringsnøgler fra AuthService
-var authServiceResponse = httpClient.GetAsync("Auth/GetValidationKeys").Result;
+    // Hent valideringsnøgler fra AuthService
+    var authServiceResponse = httpClient.GetAsync("Auth/GetValidationKeys").Result;
 
 
 
@@ -91,13 +90,7 @@ var authServiceResponse = httpClient.GetAsync("Auth/GetValidationKeys").Result;
 
     var app = builder.Build();
 
-  /*  // Configure the HTTP request pipeline.
-    if (app.Environment.IsDevelopment())
-    {
-        app.UseSwagger();
-        app.UseSwaggerUI();
-    }
-*/
+
     // Configure static file serving
     var uploadedImagesPath = "/srv/images";  // Your Docker volume mount path
     app.UseStaticFiles(new StaticFileOptions
