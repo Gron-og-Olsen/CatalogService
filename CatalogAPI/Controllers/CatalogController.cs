@@ -22,6 +22,7 @@ namespace CatalogAPI.Controllers
             _logger = logger;
         }
 
+        
         [HttpPost]
         [Route("AddProduct")]
         [Authorize]
@@ -63,7 +64,7 @@ namespace CatalogAPI.Controllers
             }
         }
 
-       
+
         [HttpGet]
         [Route("GetAllProducts")]
         public async Task<ActionResult<List<Product>>> GetAllProducts()
@@ -93,7 +94,6 @@ namespace CatalogAPI.Controllers
             return Ok(products);
         }
 
-      
         [HttpGet("{productId}", Name = "GetProductById")]
         [Route("GetProductById/{productId}")]
         public async Task<ActionResult<Product>> GetProductById(Guid productId)
